@@ -1,0 +1,52 @@
+name: muza_topup
+description: "Muza Top-Up — PUBG Mobile UC & eFootball Coins top-up app"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # Backend
+  supabase_flutter: ^2.5.6
+
+  # State management
+  provider: ^6.1.2
+
+  # UI
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  fl_chart: ^0.68.0
+  lottie: ^3.1.2
+
+  # Utilities
+  image_picker: ^1.1.2
+  intl: ^0.19.0
+  url_launcher: ^6.3.0
+  uuid: ^4.4.0
+  flutter_dotenv: ^5.1.0
+  connectivity_plus: ^6.0.3
+
+  # Notifications
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.0.4
+  flutter_local_notifications: ^17.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/
+    - assets/lottie/
