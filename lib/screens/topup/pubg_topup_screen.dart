@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
@@ -67,6 +68,30 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
       _snack('Failed to submit order: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+
+  Future<void> _sendPayment() async {
+    String code;
+    switch (_paymentMethod) {
+      case 'ZAAD':
+        code = '*712*${AppConstants.paymentNumber}*19#';
+        break;
+      case 'eDahab':
+        code = '*880*${AppConstants.paymentNumber}#';
+        break;
+      case 'Sahal Pay':
+        code = '*883*${AppConstants.paymentNumber}#';
+        break;
+      default:
+        code = '*712*${AppConstants.paymentNumber}*19#';
+    }
+    final uri = Uri.parse('tel:${Uri.encodeComponent(code)}');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      _snack('Could not open dialer');
     }
   }
 
@@ -164,13 +189,31 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14)),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.gold, size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text('Send payment to ${AppConstants.paymentNumber} via $_paymentMethod',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, color: AppColors.gold, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text('Send payment to ${AppConstants.paymentNumber} via $_paymentMethod',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _sendPayment,
+                    icon: const Icon(Icons.call_rounded, size: 16),
+                    label: const Text('Send Payment Now'),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.gold),
+                      foregroundColor: AppColors.gold,
+                    ),
+                  ),
                 ),
               ],
             ),
