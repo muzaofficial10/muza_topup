@@ -17,7 +17,7 @@ class StorageService {
     await _client.storage.from(bucket).upload(
           path,
           file,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+          fileOptions: FileOptions(cacheControl: '3600', upsert: false),
         );
     return path;
   }
