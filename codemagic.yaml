@@ -11,6 +11,9 @@ workflows:
       - name: Generate Android platform files
         script: |
           flutter create --platforms=android .
+      - name: Add INTERNET permission
+        script: |
+          sed -i '/<manifest/a\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
       - name: Build APK
         script: |
           flutter build apk --release
