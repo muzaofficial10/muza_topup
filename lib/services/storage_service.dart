@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 import '../core/supabase_client.dart';
