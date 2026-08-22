@@ -1,19 +1,15 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Central Supabase access point.
-///
-/// Reads credentials from `.env` (never hard-code keys in source).
-/// Only the ANON key belongs in the app — the service_role key must
-/// stay server-side (Supabase Edge Functions / admin dashboard backend).
 class SupabaseService {
   SupabaseService._();
 
+  static const String _url = 'https://lcslhmrtfdzzqbmcaoqx.supabase.co';
+  static const String _anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxjc2xobXJ0ZmR6enFibWNhb3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyODE1NDksImV4cCI6MjEwMjg1NzU0OX0.tvhZVpXBaFvguCCKZaZpAJ3kgI-h-MPWNCar-DUdrXE';
+
   static Future<void> init() async {
-    await dotenv.load(fileName: '.env');
     await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+      url: _url,
+      anonKey: _anonKey,
       authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
       ),
