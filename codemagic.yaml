@@ -13,7 +13,15 @@ workflows:
           flutter create --platforms=android .
       - name: Add INTERNET permission
         script: |
-          sed -i '/<manifest/a\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+          python3 -c "
+          import re
+          path = 'android/app/src/main/AndroidManifest.xml'
+          content = open(path).read()
+          if 'android.permission.INTERNET' not in content:
+              content = content.replace('<manifest', '<manifest xmlns:tools=\"http://schemas.android.com/tools\"', 1) if False else content
+              content = re.sub(r'(<manifest[^>]*>)', r'\1\n    <uses-permission android:name=\"android.permission.INTERNET\" />', content, count=1)
+              open(path, 'w').write(content)
+          "
       - name: Build APK
         script: |
           flutter build apk --release
