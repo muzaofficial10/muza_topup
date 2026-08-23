@@ -22,6 +22,7 @@ class EfootballTopupScreen extends StatefulWidget {
 class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _codeCtrl = TextEditingController();
   bool _obscure = true;
   int _selectedIndex = -1;
   String _paymentMethod = AppConstants.paymentMethods.first;
@@ -66,6 +67,7 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
         paymentMethod: _paymentMethod,
         status: OrderStatus.pending,
         createdAt: DateTime.now(),
+        verificationCode: _codeCtrl.text.trim().isEmpty ? null : _codeCtrl.text.trim(),
       );
 
       await context.read<OrderService>().createOrder(order);
@@ -186,6 +188,38 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
                 icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: AppColors.textMuted),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _codeCtrl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Security Code (if you already have one)',
+              hintText: 'Leave blank if not received yet',
+              prefixIcon: Icon(Icons.verified_user_rounded),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.processing.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.processing.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.mark_email_read_rounded, color: AppColors.processing, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "eFootball may email you a security code after we start the top-up. "
+                    "You can add it later from Order History if you don't have it yet.",
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 22),

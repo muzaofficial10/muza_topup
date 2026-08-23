@@ -16,6 +16,7 @@ class OrderModel {
   final OrderStatus status;
   final DateTime createdAt;
   final String? adminNote;
+  final String? verificationCode;
 
   OrderModel({
     required this.id,
@@ -32,6 +33,7 @@ class OrderModel {
     required this.status,
     required this.createdAt,
     this.adminNote,
+    this.verificationCode,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,7 @@ class OrderModel {
       status: OrderStatusX.fromString(json['status'] as String? ?? 'pending'),
       createdAt: DateTime.parse(json['created_at'] as String),
       adminNote: json['admin_note'] as String?,
+      verificationCode: json['verification_code'] as String?,
     );
   }
 
@@ -65,6 +68,7 @@ class OrderModel {
       'payment_screenshot': paymentScreenshotUrl,
       'payment_method': paymentMethod,
       'status': status.name,
+      if (verificationCode != null) 'verification_code': verificationCode,
     };
   }
 }

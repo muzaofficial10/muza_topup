@@ -11,6 +11,9 @@ workflows:
       - name: Generate Android platform files
         script: |
           flutter create --platforms=android .
+      - name: Generate launcher icons
+        script: |
+          dart run flutter_launcher_icons
       - name: Add INTERNET permission
         script: |
           python3 -c "

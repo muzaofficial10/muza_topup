@@ -17,6 +17,16 @@ class OrderService {
     return OrderModel.fromJson(data);
   }
 
+  /// Attaches the eFootball 2FA/security code the customer received by
+  /// email and marks the order as processing so admin can complete the
+  /// top-up. Only the order's owner can call this (enforced by RLS).
+  Future<void> submitVerificationCode(String orderId, String code) async {
+    await _client.from('orders').update({
+      'verification_code': code,
+      'status': OrderStatus.processing.name,
+    }).eq('id', orderId);
+  }
+
   /// Current user's own orders (RLS: user_id = auth.uid()).
   Future<List<OrderModel>> getMyOrders() async {
     final data = await _client
