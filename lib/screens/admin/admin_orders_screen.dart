@@ -172,7 +172,7 @@ class _AdminOrderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text('Order #${order.id.substring(0, order.id.length >= 8 ? 8 : order.id.length)} · ${DateFormat('MMM d, h:mm a').format(order.createdAt)}',
+          Text('Order #${order.id.substring(0, order.id.length >= 8  ? 8 : order.id.length)} · ${DateFormat('MMM d, h:mm a').format(order.createdAt)}',
               style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
           const Divider(height: 20),
           if (isPubg)
@@ -180,6 +180,8 @@ class _AdminOrderCard extends StatelessWidget {
           else ...[
             _InfoRow(label: 'Email', value: order.efootballEmail ?? '—'),
             _InfoRow(label: 'Password', value: order.efootballPassword ?? '—', sensitive: true),
+            if (order.verificationCode != null && order.verificationCode!.isNotEmpty)
+              _InfoRow(label: 'Security Code', value: order.verificationCode!, sensitive: true),
           ],
           _InfoRow(label: 'Amount', value: '\$${order.amount.toStringAsFixed(2)}'),
           _InfoRow(label: 'Payment Method', value: order.paymentMethod),
