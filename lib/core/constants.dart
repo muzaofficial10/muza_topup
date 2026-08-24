@@ -8,7 +8,7 @@ class AppConstants {
   static const String appName = 'Muza Top-Up';
 
   // Payment
-  static const List<String> paymentMethods = ['ZAAD', 'eDahab', 'Sahal Pay'];
+  static const List<String> paymentMethods = ['EVC Plus', 'eDahab'];
   static const String paymentNumber = '614457264';
 
   // WhatsApp support number (same as payment number unless changed)
@@ -46,7 +46,7 @@ class AppConstants {
     },
     {
       'q': 'What payment methods do you accept?',
-      'a': 'We accept ZAAD, eDahab, and Sahal Pay. Send payment to '
+      'a': 'We accept EVC Plus and eDahab. Send payment to '
           '$paymentNumber and upload your screenshot.',
     },
     {
