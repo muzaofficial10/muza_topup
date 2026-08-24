@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
 import '../../core/supabase_client.dart';
@@ -25,6 +25,33 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
   String _paymentMethod = AppConstants.paymentMethods.first;
   File? _screenshot;
   bool _submitting = false;
+
+  /// Builds an EVC Plus / eDahab style USSD string that includes the
+  /// amount, e.g. *712*614457264*10*5# for $10.05 via EVC Plus.
+  String _buildUssdCode(double amount) {
+    final whole = amount.floor();
+    final cents = ((amount - whole) * 100).round();
+    final prefix = _paymentMethod == 'eDahab' ? '*880' : '*712';
+    if (cents == 0) {
+      return '$prefix*${AppConstants.paymentNumber}*$whole#';
+    }
+    return '$prefix*${AppConstants.paymentNumber}*$whole*$cents#';
+  }
+
+  Future<void> _sendPayment() async {
+    if (_selectedIndex == -1) {
+      _snack('Please select a UC package first');
+      return;
+    }
+    final price = (AppConstants.pubgPackages[_selectedIndex]['price'] as num).toDouble();
+    final code = _buildUssdCode(price);
+    final uri = Uri.parse('tel:${Uri.encodeComponent(code)}');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      _snack('Could not open dialer');
+    }
+  }
 
   Future<void> _submit() async {
     if (_uidCtrl.text.trim().isEmpty) {
@@ -68,30 +95,6 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
       _snack('Failed to submit order: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-
-  Future<void> _sendPayment() async {
-    String code;
-    switch (_paymentMethod) {
-      case 'ZAAD':
-        code = '*712*${AppConstants.paymentNumber}*19#';
-        break;
-      case 'eDahab':
-        code = '*880*${AppConstants.paymentNumber}#';
-        break;
-      case 'Sahal Pay':
-        code = '*883*${AppConstants.paymentNumber}#';
-        break;
-      default:
-        code = '*712*${AppConstants.paymentNumber}*19#';
-    }
-    final uri = Uri.parse('tel:${Uri.encodeComponent(code)}');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      _snack('Could not open dialer');
     }
   }
 
