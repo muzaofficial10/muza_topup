@@ -6,7 +6,6 @@ import '../../widgets/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -17,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
-
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -35,7 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,22 +47,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 40),
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppColors.neonButtonGradient,
+                  GestureDetector(
+                    onLongPress: () => Navigator.of(context).pushNamed('/admin/login'),
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.neonButtonGradient,
+                      ),
+                      child: const Icon(Icons.bolt_rounded, color: Colors.black, size: 34),
                     ),
-                    child: const Icon(Icons.bolt_rounded, color: Colors.black, size: 34),
                   ),
                   const SizedBox(height: 24),
                   const Text('Welcome Back',
                       style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                   const SizedBox(height: 6),
-                  const Text('Log in to top up your game instantly',
-                      style: TextStyle(color: AppColors.textSecondary)),
-                  const SizedBox(height: 32),
+                  const Text('Log in to top up your game instan
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
@@ -114,12 +112,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pushNamed('/admin/login'),
-                      child: const Text('Admin Login', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                     ),
                   ),
                 ],
