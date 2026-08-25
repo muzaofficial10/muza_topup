@@ -5,9 +5,6 @@ import '../models/order_model.dart';
 class OrderService {
   final _client = SupabaseService.client;
 
-  /// Creates an order. RLS ensures user_id is forced server-side to
-  /// auth.uid() via a DEFAULT + policy, so a client can't spoof another
-  /// user's order (see schema.sql).
   Future<OrderModel> createOrder(OrderModel order) async {
     final data = await _client
         .from('orders')
@@ -17,17 +14,6 @@ class OrderService {
     return OrderModel.fromJson(data);
   }
 
-  /// Attaches the eFootball 2FA/security code the customer received by
-  /// email and marks the order as processing so admin can complete the
-  /// top-up. Only the order's owner can call this (enforced by RLS).
-  Future<void> submitVerificationCode(String orderId, String code) async {
-    await _client.from('orders').update({
-      'verification_code': code,
-      'status': OrderStatus.processing.name,
-    }).eq('id', orderId);
-  }
-
-  /// Current user's own orders (RLS: user_id = auth.uid()).
   Future<List<OrderModel>> getMyOrders() async {
     final data = await _client
         .from('orders')
@@ -35,7 +21,6 @@ class OrderService {
         .order('created_at', ascending: false);
     return (data as List).map((e) => OrderModel.fromJson(e)).toList();
   }
-
   Stream<List<OrderModel>> watchMyOrders(String userId) {
     return _client
         .from('orders')
@@ -45,8 +30,19 @@ class OrderService {
         .map((rows) => rows.map((e) => OrderModel.fromJson(e)).toList());
   }
 
-  // ---------- Admin-only (enforced by RLS: profiles.is_admin = true) ----------
+  Future<void> submitVerificationCode(String orderId, String code) async {
+    await _client.from('orders').update({
+      'verification_code': code,
+      'status': OrderStatus.processing.name,
+      'code_requested': false,
+    }).eq('id', orderId);
+  }
 
+  Future<void> requestVerificationCode(String orderId) async {
+    await _client.from('orders').update({
+      'code_requested': true,
+    }).eq('id', orderId);
+  }
   Future<List<OrderModel>> getAllOrders({
     OrderStatus? status,
     GameType? game,
