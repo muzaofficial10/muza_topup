@@ -27,7 +27,6 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
   String _paymentMethod = AppConstants.paymentMethods.first;
   File? _screenshot;
   bool _submitting = false;
-
   String _buildUssdCode(double amount) {
     final whole = amount.floor();
     final cents = ((amount - whole) * 100).round();
@@ -35,20 +34,37 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
     if (cents == 0) return '$prefix*${AppConstants.paymentNumber}*$whole#';
     return '$prefix*${AppConstants.paymentNumber}*$whole*$cents#';
   }
-
   Future<void> _sendPayment() async {
-    if (_selectedIndex == -1) { _snack('Please select a Coin package first'); return; }
+    if (_selectedIndex == -1) {
+      _snack('Please select a Coin package first');
+      return;
+    }
     final price = (AppConstants.efootballPackages[_selectedIndex]['price'] as num).toDouble();
     final code = _buildUssdCode(price);
     final uri = Uri.parse('tel:${Uri.encodeComponent(code)}');
-    if (await canLaunchUrl(uri)) { await launchUrl(uri); } else { _snack('Could not open dialer'); }
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      _snack('Could not open dialer');
+    }
   }
-
   Future<void> _submit() async {
-    if (_emailCtrl.text.trim().isEmpty || !_emailCtrl.text.contains('@')) { _snack('Please enter a valid eFootball email'); return; }
-    if (_passwordCtrl.text.isEmpty) { _snack('Please enter your eFootball password'); return; }
-    if (_selectedIndex == -1) { _snack('Please select a Coin package'); return; }
-    if (_screenshot == null) { _snack('Please upload your payment screenshot'); return; }
+    if (_emailCtrl.text.trim().isEmpty || !_emailCtrl.text.contains('@')) {
+      _snack('Please enter a valid eFootball email');
+      return;
+    }
+    if (_passwordCtrl.text.isEmpty) {
+      _snack('Please enter your eFootball password');
+      return;
+    }
+    if (_selectedIndex == -1) {
+      _snack('Please select a Coin package');
+      return;
+    }
+    if (_screenshot == null) {
+      _snack('Please upload your payment screenshot');
+      return;
+    }
     setState(() => _submitting = true);
     try {
       final userId = SupabaseService.currentUser!.id;
@@ -56,11 +72,18 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
       final path = await storage.uploadScreenshot(_screenshot!, userId);
       final pkg = AppConstants.efootballPackages[_selectedIndex];
       final order = OrderModel(
-        id: '', userId: userId, game: GameType.efootball,
-        efootballEmail: _emailCtrl.text.trim(), efootballPassword: _passwordCtrl.text,
-        packageName: pkg['name'] as String, packageAmount: pkg['amount'] as int,
-        amount: (pkg['price'] as num).toDouble(), paymentScreenshotUrl: path,
-        paymentMethod: _paymentMethod, status: OrderStatus.pending, createdAt: DateTime.now(),
+        id: '',
+        userId: userId,
+        game: GameType.efootball,
+        efootballEmail: _emailCtrl.text.trim(),
+        efootballPassword: _passwordCtrl.text,
+        packageName: pkg['name'] as String,
+        packageAmount: pkg['amount'] as int,
+        amount: (pkg['price'] as num).toDouble(),
+        paymentScreenshotUrl: path,
+        paymentMethod: _paymentMethod,
+        status: OrderStatus.pending,
+        createdAt: DateTime.now(),
         verificationCode: _codeCtrl.text.trim().isEmpty ? null : _codeCtrl.text.trim(),
       );
       await context.read<OrderService>().createOrder(order);
@@ -73,9 +96,7 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
       if (mounted) setState(() => _submitting = false);
     }
   }
-
   void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -83,11 +104,24 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Row(children: [Icon(Icons.check_circle_rounded, color: AppColors.success), SizedBox(width: 10), Text('Order Submitted')]),
-        content: const Text('Your order has been received and is pending verification. You can track its status in Order History.', style: TextStyle(color: AppColors.textSecondary)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: AppColors.success),
+            SizedBox(width: 10),
+            Text('Order Submitted'),
+          ],
+        ),
+        content: const Text(
+          'Your order has been received and is pending verification. '
+          'You can track its status in Order History.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
         actions: [
           TextButton(
-            onPressed: () { Navigator.of(context).pop(); Navigator.of(context).pushReplacementNamed('/orders'); },
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed('/orders');
+            },
             child: const Text('View Orders', style: TextStyle(color: AppColors.neonBlue)),
           ),
         ],
@@ -178,4 +212,13 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
               padding: const EdgeInsets.only(bottom: 14),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('Total', style: TextStyle(color: AppColors.textSecondary)),
-                Text('\$${selectedPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontW
+                Text('\$${selectedPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.gold)),
+              ]),
+            ),
+          CustomButton(label: 'Submit Order', onPressed: _submit, loading: _submitting, gold: true, icon: Icons.send_rounded),
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+}
