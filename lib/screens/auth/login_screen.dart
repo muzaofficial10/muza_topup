@@ -63,7 +63,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text('Welcome Back',
                       style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                   const SizedBox(height: 6),
-                  const Text('Log in to top up your game instan
+                  const Text('Log in to top up your game instantly',
+                             style: TextStyle(color: AppColors.textSecondary)),
+                  const SizedBox(height: 32),
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
