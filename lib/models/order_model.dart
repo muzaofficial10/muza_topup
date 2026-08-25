@@ -4,19 +4,19 @@ class OrderModel {
   final String id;
   final String userId;
   final GameType game;
-  final String? playerId; // PUBG UID
+  final String? playerId;
   final String? efootballEmail;
-  final String?
-      efootballPassword; // never displayed except in admin, restricted by RLS
+  final String? efootballPassword;
   final String packageName;
   final int packageAmount;
-  final double amount; // price in USD/local currency
+  final double amount;
   final String? paymentScreenshotUrl;
   final String paymentMethod;
   final OrderStatus status;
   final DateTime createdAt;
   final String? adminNote;
   final String? verificationCode;
+  final bool codeRequested;
 
   OrderModel({
     required this.id,
@@ -34,6 +34,7 @@ class OrderModel {
     required this.createdAt,
     this.adminNote,
     this.verificationCode,
+    this.codeRequested = false,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -53,6 +54,7 @@ class OrderModel {
       createdAt: DateTime.parse(json['created_at'] as String),
       adminNote: json['admin_note'] as String?,
       verificationCode: json['verification_code'] as String?,
+      codeRequested: json['code_requested'] as bool? ?? false,
     );
   }
 
