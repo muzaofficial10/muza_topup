@@ -10,7 +10,6 @@ import '../../widgets/order_status_badge.dart';
 
 class AdminOrdersScreen extends StatefulWidget {
   const AdminOrdersScreen({super.key});
-
   @override
   State<AdminOrdersScreen> createState() => _AdminOrdersScreenState();
 }
@@ -46,6 +45,15 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     _load();
   }
 
+  Future<void> _requestCode(OrderModel order) async {
+    await context.read<OrderService>().requestVerificationCode(order.id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Code request sent — customer will see it in their app')),
+      );
+    }
+    _load();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,6 +107,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         itemBuilder: (_, i) => _AdminOrderCard(
                           order: _orders[i],
                           onStatusChange: (s) => _updateStatus(_orders[i], s),
+                          onRequestCode: () => _requestCode(_orders[i]),
                         ),
                       ),
           ),
@@ -130,11 +139,11 @@ class _FilterChip extends StatelessWidget {
     );
   }
 }
-
 class _AdminOrderCard extends StatelessWidget {
   final OrderModel order;
   final ValueChanged<OrderStatus> onStatusChange;
-  const _AdminOrderCard({required this.order, required this.onStatusChange});
+  final VoidCallback onRequestCode;
+  const _AdminOrderCard({required this.order, required this.onStatusChange, required this.onRequestCode});
 
   Future<void> _viewScreenshot(BuildContext context) async {
     if (order.paymentScreenshotUrl == null) return;
@@ -172,16 +181,21 @@ class _AdminOrderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text('Order #${order.id.substring(0, order.id.length >= 8  ? 8 : order.id.length)} · ${DateFormat('MMM d, h:mm a').format(order.createdAt)}',
+          Text('Order #${order.id.substring(0, order.id.length >= 8  ? 8 : order.id.length)} \u00b7 ${DateFormat('MMM d, h:mm a').format(order.createdAt)}',
               style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
           const Divider(height: 20),
           if (isPubg)
-            _InfoRow(label: 'PUBG UID', value: order.playerId ?? '—')
+            _InfoRow(label: 'PUBG UID', value: order.playerId ?? '\u2014')
           else ...[
-            _InfoRow(label: 'Email', value: order.efootballEmail ?? '—'),
-            _InfoRow(label: 'Password', value: order.efootballPassword ?? '—', sensitive: true),
+            _InfoRow(label: 'Email', value: order.efootballEmail ?? '\u2014'),
+            _InfoRow(label: 'Password', value: order.efootballPassword ?? '\u2014', sensitive: true),
             if (order.verificationCode != null && order.verificationCode!.isNotEmpty)
-              _InfoRow(label: 'Security Code', value: order.verificationCode!, sensitive: true),
+              _InfoRow(label: 'Security Code', value: order.verificationCode!, sensitive: true)
+            else if (order.codeRequested)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Text('Code requested \u2014 waiting for customer', style: TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w600)),
+              ),
           ],
           _InfoRow(label: 'Amount', value: '\$${order.amount.toStringAsFixed(2)}'),
           _InfoRow(label: 'Payment Method', value: order.paymentMethod),
@@ -201,6 +215,23 @@ class _AdminOrderCard extends StatelessWidget {
               ),
             ],
           ),
+          if (!isPubg &&
+              (order.verificationCode == null || order.verificationCode!.isEmpty) &&
+              !order.codeRequested) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onRequestCode,
+                icon: const Icon(Icons.mark_email_unread_rounded, size: 16),
+                label: const Text('Request Security Code'),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.warning),
+                  foregroundColor: AppColors.warning,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
