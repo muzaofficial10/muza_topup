@@ -10,7 +10,6 @@ import '../../widgets/order_status_badge.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
-
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
 }
@@ -59,7 +58,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 }
-
 class _OrderTile extends StatelessWidget {
   final OrderModel order;
   const _OrderTile({required this.order});
@@ -107,23 +105,47 @@ class _OrderTile extends StatelessWidget {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final needsCode = order.game == GameType.efootball &&
-        order.status == OrderStatus.pending &&
         (order.verificationCode == null || order.verificationCode!.isEmpty);
+    final adminRequestedCode = needsCode && order.codeRequested;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(
+          color: adminRequestedCode ? AppColors.warning.withOpacity(0.5) : Colors.white.withOpacity(0.06),
+          width: adminRequestedCode ? 1.4 : 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (adminRequestedCode)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.warning.withOpacity(0.4)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 18),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Admin needs your eFootball security code to complete this order',
+                      style: TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Row(
             children: [
               Icon(
@@ -144,7 +166,7 @@ class _OrderTile extends StatelessWidget {
               Text('Order #${order.id.substring(0, order.id.length >= 8 ? 8 : order.id.length)}',
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
               const Spacer(),
-              Text(DateFormat('MMM d, y · h:mm a').format(order.createdAt),
+              Text(DateFormat('MMM d, y \u00b7 h:mm a').format(order.createdAt),
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
             ],
           ),
@@ -166,8 +188,8 @@ class _OrderTile extends StatelessWidget {
                 icon: const Icon(Icons.verified_user_rounded, size: 16),
                 label: const Text('Submit Security Code'),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.processing),
-                  foregroundColor: AppColors.processing,
+                  side: BorderSide(color: adminRequestedCode ? AppColors.warning : AppColors.processing),
+                  foregroundColor: adminRequestedCode ? AppColors.warning : AppColors.processing,
                 ),
               ),
             ),
