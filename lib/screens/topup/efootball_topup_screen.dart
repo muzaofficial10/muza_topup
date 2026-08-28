@@ -6,8 +6,10 @@ import '../../core/theme.dart';
 import '../../core/constants.dart';
 import '../../core/supabase_client.dart';
 import '../../models/order_model.dart';
+import '../../models/package_model.dart';
 import '../../services/order_service.dart';
 import '../../services/storage_service.dart';
+import '../../services/product_service.dart';
 import '../../widgets/package_card.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/screenshot_uploader.dart';
@@ -27,6 +29,22 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
   String _paymentMethod = AppConstants.paymentMethods.first;
   File? _screenshot;
   bool _submitting = false;
+  bool _loadingPackages = true;
+  List<PackageModel> _packages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackages();
+  }
+
+  Future<void> _loadPackages() async {
+    final pkgs = await context.read<ProductService>().getPackages(GameType.efootball);
+    if (mounted) setState(() {
+      _packages = pkgs;
+      _loadingPackages = false;
+    });
+  }
   String _buildUssdCode(double amount) {
     final whole = amount.floor();
     final cents = ((amount - whole) * 100).round();
@@ -34,12 +52,13 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
     if (cents == 0) return '$prefix*${AppConstants.paymentNumber}*$whole#';
     return '$prefix*${AppConstants.paymentNumber}*$whole*$cents#';
   }
+
   Future<void> _sendPayment() async {
     if (_selectedIndex == -1) {
       _snack('Please select a Coin package first');
       return;
     }
-    final price = (AppConstants.efootballPackages[_selectedIndex]['price'] as num).toDouble();
+    final price = _packages[_selectedIndex].price;
     final code = _buildUssdCode(price);
     final uri = Uri.parse('tel:${Uri.encodeComponent(code)}');
     if (await canLaunchUrl(uri)) {
@@ -65,27 +84,30 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
       _snack('Please upload your payment screenshot');
       return;
     }
+
     setState(() => _submitting = true);
     try {
       final userId = SupabaseService.currentUser!.id;
       final storage = context.read<StorageService>();
       final path = await storage.uploadScreenshot(_screenshot!, userId);
-      final pkg = AppConstants.efootballPackages[_selectedIndex];
+
+      final pkg = _packages[_selectedIndex];
       final order = OrderModel(
         id: '',
         userId: userId,
         game: GameType.efootball,
         efootballEmail: _emailCtrl.text.trim(),
         efootballPassword: _passwordCtrl.text,
-        packageName: pkg['name'] as String,
-        packageAmount: pkg['amount'] as int,
-        amount: (pkg['price'] as num).toDouble(),
+        packageName: pkg.name,
+        packageAmount: pkg.amount,
+        amount: pkg.price,
         paymentScreenshotUrl: path,
         paymentMethod: _paymentMethod,
         status: OrderStatus.pending,
         createdAt: DateTime.now(),
         verificationCode: _codeCtrl.text.trim().isEmpty ? null : _codeCtrl.text.trim(),
       );
+
       await context.read<OrderService>().createOrder(order);
       if (!mounted) return;
       _passwordCtrl.clear();
@@ -96,7 +118,9 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
       if (mounted) setState(() => _submitting = false);
     }
   }
+
   void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -130,10 +154,13 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    final selectedPrice = _selectedIndex == -1 ? 0.0 : (AppConstants.efootballPackages[_selectedIndex]['price'] as num).toDouble();
+    final selectedPrice = _selectedIndex == -1 || _packages.isEmpty ? 0.0 : _packages[_selectedIndex].price;
+
     return Scaffold(
       appBar: AppBar(title: const Text('eFootball Coins Top-Up')),
-      body: ListView(
+      body: _loadingPackages
+          ? const Center(child: CircularProgressIndicator(color: AppColors.neonBlue))
+          : ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Container(
@@ -168,11 +195,16 @@ class _EfootballTopupScreenState extends State<EfootballTopupScreen> {
           const SizedBox(height: 22),
           const Text('Select Coin Package', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 12),
-          ...List.generate(AppConstants.efootballPackages.length, (i) {
-            final pkg = AppConstants.efootballPackages[i];
+          if (_packages.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Text('No packages available right now.', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+          ...List.generate(_packages.length, (i) {
+            final pkg = _packages[i];
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: PackageCard(title: pkg['name'] as String, subtitle: 'eFootball Coins', price: (pkg['price'] as num).toDouble(), icon: Icons.sports_soccer_rounded, selected: _selectedIndex == i, onTap: () => setState(() => _selectedIndex = i)),
+              child: PackageCard(title: pkg.name, subtitle: 'eFootball Coins', price: pkg.price, icon: Icons.sports_soccer_rounded, selected: _selectedIndex == i, onTap: () => setState(() => _selectedIndex = i)),
             );
           }),
           const SizedBox(height: 22),
