@@ -94,10 +94,18 @@ class _OrderTile extends StatelessWidget {
           TextButton(
             onPressed: () async {
               if (codeCtrl.text.trim().isEmpty) return;
-              await dialogContext
-                  .read<OrderService>()
-                  .submitVerificationCode(order.id, codeCtrl.text.trim());
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              try {
+                await dialogContext
+                    .read<OrderService>()
+                    .submitVerificationCode(order.id, codeCtrl.text.trim());
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              } catch (e) {
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
             },
             child: const Text('Submit', style: TextStyle(color: AppColors.neonBlue)),
           ),
