@@ -77,13 +77,11 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
       _snack('Please upload your payment screenshot');
       return;
     }
-
     setState(() => _submitting = true);
     try {
       final userId = SupabaseService.currentUser!.id;
       final storage = context.read<StorageService>();
       final path = await storage.uploadScreenshot(_screenshot!, userId);
-
       final pkg = _packages[_selectedIndex];
       final order = OrderModel(
         id: '',
@@ -98,7 +96,6 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
         status: OrderStatus.pending,
         createdAt: DateTime.now(),
       );
-
       await context.read<OrderService>().createOrder(order);
       if (!mounted) return;
       _showSuccessDialog();
@@ -112,7 +109,6 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
   void _snack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
-
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -120,10 +116,33 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        @override
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: AppColors.success),
+            SizedBox(width: 10),
+            Text('Order Submitted'),
+          ],
+        ),
+        content: const Text(
+          'Your order has been received and is pending verification. '
+          'You can track its status in Order History.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed('/orders');
+            },
+            child: const Text('View Orders', style: TextStyle(color: AppColors.neonBlue)),
+          ),
+        ],
+      ),
+    );
+  }
+  @override
   Widget build(BuildContext context) {
     final selectedPrice = _selectedIndex == -1 || _packages.isEmpty ? 0.0 : _packages[_selectedIndex].price;
-
     return Scaffold(
       appBar: AppBar(title: const Text('PUBG UC Top-Up')),
       body: _loadingPackages
@@ -213,4 +232,26 @@ class _PubgTopupScreenState extends State<PubgTopupScreen> {
             ),
           ),
           const SizedBox(height: 22),
-          const Text('Payment Screenshot', s
+          const Text('Payment Screenshot', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          const SizedBox(height: 10),
+          ScreenshotUploader(onChanged: (f) => setState(() => _screenshot = f)),
+          const SizedBox(height: 24),
+          if (selectedPrice > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total', style: TextStyle(color: AppColors.textSecondary)),
+                  Text('\$${selectedPrice.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.gold)),
+                ],
+              ),
+            ),
+          CustomButton(label: 'Submit Order', onPressed: _submit, loading: _submitting, icon: Icons.send_rounded),
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+}
